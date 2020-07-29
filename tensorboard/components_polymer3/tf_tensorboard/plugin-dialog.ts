@@ -13,19 +13,25 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
-import { PolymerElement, html } from "@polymer/polymer";
-import { customElement, property } from "@polymer/decorators";
-import { DO_NOT_SUBMIT } from "../tf-imports/polymer.html";
-import { DO_NOT_SUBMIT } from "../tf-imports/lodash.html";
-import { DO_NOT_SUBMIT } from "../tf-imports/polymer.html";
-import { DO_NOT_SUBMIT } from "../tf-imports/lodash.html";
-@customElement("tf-plugin-dialog")
+import {PolymerElement, html} from '@polymer/polymer';
+import {customElement, property} from '@polymer/decorators';
+import {DO_NOT_SUBMIT} from '../tf-imports/polymer.html';
+import {DO_NOT_SUBMIT} from '../tf-imports/lodash.html';
+import {DO_NOT_SUBMIT} from '../tf-imports/polymer.html';
+import {DO_NOT_SUBMIT} from '../tf-imports/lodash.html';
+@customElement('tf-plugin-dialog')
 class TfPluginDialog extends PolymerElement {
-    static readonly template = html `<!-- We use a custom backdrop to avoid occluding the TensorBoard navbar. -->
+  static readonly template = html`
+    <!-- We use a custom backdrop to avoid occluding the TensorBoard navbar. -->
     <template is="dom-if" if="[[_open]]">
       <div id="dashboard-backdrop"></div>
     </template>
-    <paper-dialog id="dialog" modal="" opened="{{_open}}" with-backdrop="[[_useNativeBackdrop]]">
+    <paper-dialog
+      id="dialog"
+      modal=""
+      opened="{{_open}}"
+      with-backdrop="[[_useNativeBackdrop]]"
+    >
       <h2 id="dialog-title">[[_title]]</h2>
       <div class="custom-message">[[_customMessage]]</div>
     </paper-dialog>
@@ -47,48 +53,55 @@ class TfPluginDialog extends PolymerElement {
         margin-top: 0;
         margin-bottom: 15px;
       }
-    </style>`;
-    @property({
-        type: String
-    })
-    _title: string = null;
-    @property({
-        type: String
-    })
-    _customMessage: string = null;
-    @property({
-        type: Boolean
-    })
-    _open: boolean;
-    @property({
-        type: Boolean,
-        computed: '_computeHidden(_open)',
-        reflectToAttribute: true
-    })
-    _hidden: boolean;
-    @property({
-        type: Boolean,
-        readOnly: true
-    })
-    _useNativeBackdrop: boolean = false;
-    openNoTensorFlowDialog() {
-        this.openDialog('This plugin is disabled without TensorFlow', 'To enable this plugin in TensorBoard, install TensorFlow with ' +
-            '"pip install tensorflow" or equivalent.');
-    }
-    openOldTensorFlowDialog(version) {
-        this.openDialog('This plugin is disabled without TensorFlow ' + version, 'To enable this plugin in TensorBoard, install TensorFlow ' +
-            version +
-            ' or greater with "pip install tensorflow" or equivalent.');
-    }
-    openDialog(title, message) {
-        this.set('_title', title);
-        this.set('_customMessage', message);
-        this.$.dialog.open();
-    }
-    closeDialog() {
-        this.$.dialog.close();
-    }
-    _computeHidden(open) {
-        return !open;
-    }
+    </style>
+  `;
+  @property({
+    type: String,
+  })
+  _title: string = null;
+  @property({
+    type: String,
+  })
+  _customMessage: string = null;
+  @property({
+    type: Boolean,
+  })
+  _open: boolean;
+  @property({
+    type: Boolean,
+    computed: '_computeHidden(_open)',
+    reflectToAttribute: true,
+  })
+  _hidden: boolean;
+  @property({
+    type: Boolean,
+    readOnly: true,
+  })
+  _useNativeBackdrop: boolean = false;
+  openNoTensorFlowDialog() {
+    this.openDialog(
+      'This plugin is disabled without TensorFlow',
+      'To enable this plugin in TensorBoard, install TensorFlow with ' +
+        '"pip install tensorflow" or equivalent.'
+    );
+  }
+  openOldTensorFlowDialog(version) {
+    this.openDialog(
+      'This plugin is disabled without TensorFlow ' + version,
+      'To enable this plugin in TensorBoard, install TensorFlow ' +
+        version +
+        ' or greater with "pip install tensorflow" or equivalent.'
+    );
+  }
+  openDialog(title, message) {
+    this.set('_title', title);
+    this.set('_customMessage', message);
+    this.$.dialog.open();
+  }
+  closeDialog() {
+    this.$.dialog.close();
+  }
+  _computeHidden(open) {
+    return !open;
+  }
 }
