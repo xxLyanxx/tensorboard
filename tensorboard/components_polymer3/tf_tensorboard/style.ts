@@ -1,4 +1,4 @@
-<!--
+/*
 @license
 Copyright 2016 The TensorFlow Authors. All Rights Reserved.
 
@@ -13,11 +13,12 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
--->
+*/
 
-<link rel="import" href="../font-roboto/roboto.html" />
+// TODO: Link in Roboto?
 
-<style>
+const style = document.createElement('style');
+style.textContent = `
   html,
   body {
     margin: 0;
@@ -33,7 +34,7 @@ limitations under the License.
      * to use subpixel AA when available. The original issue was "fixed" by removing subpixel AA in
      * macOS 14 (Mojave), but for legacy reasons they preserved the bolding effect as an option.
      * Chrome then in turn updated its font rendering to apply that bolding effect [2], which means
-     * that even though the `-webkit-font-smoothing` docs [3] suggest that setting `antialiased`
+     * that even though the \`-webkit-font-smoothing\` docs [3] suggest that setting \`antialiased\`
      * would have no effect for recent versions of macOS, it still is needed to avoid the bolding.
      *
      * [1]: http://www.lighterra.com/articles/macosxtextaabug/
@@ -43,4 +44,5 @@ limitations under the License.
      */
     -webkit-font-smoothing: antialiased;
   }
-</style>
+`;
+document.head.appendChild(style);
