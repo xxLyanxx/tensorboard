@@ -1,80 +1,83 @@
-load("//tensorboard/defs:web.bzl", "tf_web_library")
+load("//tensorboard/defs:defs.bzl", "tf_ts_library")
 
 package(default_visibility = ["//tensorboard:internal"])
 
 licenses(["notice"])  # Apache 2.0
 
-tf_web_library(
+tf_ts_library(
     name = "tf_tensorboard",
     srcs = [
         "autoReloadBehavior.ts",
-        "style.html",
-        "tf-tensorboard.html",
+        "style.ts",
+        "tf-tensorboard.ts",
     ],
-    path = "/tf-tensorboard",
+    strict_checks = False,
     visibility = ["//visibility:public"],
     deps = [
         ":registry",
-        "//tensorboard/components/experimental/plugin_util:plugin_host",
-        "//tensorboard/components/tf_backend",
-        "//tensorboard/components/tf_dashboard_common",
-        "//tensorboard/components/tf_globals",
-        "//tensorboard/components/tf_imports:lodash",
-        "//tensorboard/components/tf_imports:polymer",
-        "//tensorboard/components/tf_paginated_view",
-        "//tensorboard/components/tf_storage",
-        "@com_google_fonts_roboto",
-        "@org_polymer_iron_icons",
-        "@org_polymer_paper_button",
-        "@org_polymer_paper_checkbox",
-        "@org_polymer_paper_dialog",
-        "@org_polymer_paper_header_panel",
-        "@org_polymer_paper_icon_button",
-        "@org_polymer_paper_listbox",
-        "@org_polymer_paper_tabs",
-        "@org_polymer_paper_toolbar",
+        "//tensorboard/components_polymer3/experimental/plugin_util:plugin_host",
+        "//tensorboard/components_polymer3/tf_backend",
+        "//tensorboard/components_polymer3/tf_dashboard_common",
+        "//tensorboard/components_polymer3/tf_globals",
+        # TODO: Re-enable when paginated view store ready
+        #"//tensorboard/components_polymer3/tf_paginated_view",
+        "//tensorboard/components_polymer3/tf_storage",
+        "@npm//@polymer/decorators",
+        "@npm//@polymer/iron-icons",
+        "@npm//@polymer/paper-button",
+        "@npm//@polymer/paper-checkbox",
+        "@npm//@polymer/paper-dialog",
+        "@npm//@polymer/paper-header-panel",
+        "@npm//@polymer/paper-icon-button",
+        "@npm//@polymer/paper-listbox",
+        "@npm//@polymer/paper-tabs",
+        "@npm//@polymer/paper-toolbar",
+        "@npm//@polymer/polymer",
+        "@npm//@types/lodash",
+        "@npm//lodash",
     ],
 )
 
-tf_web_library(
+tf_ts_library(
     name = "registry",
     srcs = [
-        "registry.html",
         "registry.ts",
     ],
-    path = "/tf-tensorboard",
+    strict_checks = False,
     visibility = ["//visibility:public"],
 )
 
-tf_web_library(
+tf_ts_library(
     name = "plugin_dialog",
     srcs = [
-        "plugin-dialog.html",
+        "plugin-dialog.ts",
     ],
-    path = "/tf-tensorboard",
+    strict_checks = False,
     deps = [
-        "//tensorboard/components/tf_imports:lodash",
-        "//tensorboard/components/tf_imports:polymer",
+        "@npm//@polymer",
+        "@npm//@types/lodash",
+        "@npm//lodash",
     ],
 )
 
-tf_web_library(
+tf_ts_library(
     name = "default_plugins",
-    srcs = ["default-plugins.html"],
-    path = "/tf-tensorboard",
+    srcs = ["default-plugins.ts"],
+    strict_checks = False,
     deps = [
-        "//tensorboard/plugins/audio/tf_audio_dashboard",
-        "//tensorboard/plugins/custom_scalar/tf_custom_scalar_dashboard",
-        "//tensorboard/plugins/debugger/tf_debugger_dashboard",
-        "//tensorboard/plugins/distribution/tf_distribution_dashboard",
-        "//tensorboard/plugins/graph/tf_graph_dashboard",
-        "//tensorboard/plugins/histogram/tf_histogram_dashboard",
-        "//tensorboard/plugins/hparams/tf_hparams_dashboard",
-        "//tensorboard/plugins/image/tf_image_dashboard",
-        "//tensorboard/plugins/mesh/tf_mesh_dashboard",
-        "//tensorboard/plugins/pr_curve/tf_pr_curve_dashboard",
-        "//tensorboard/plugins/profile_redirect/tf_profile_redirect_dashboard",
-        "//tensorboard/plugins/scalar/tf_scalar_dashboard",
-        "//tensorboard/plugins/text/tf_text_dashboard",
+        # TODO: Uncomment each once ready.
+        # "//tensorboard/plugins/audio/polymer3/tf_audio_dashboard",
+        # "//tensorboard/plugins/custom_scalar/polymer3/tf_custom_scalar_dashboard",
+        # "//tensorboard/plugins/debugger/polymer3/tf_debugger_dashboard",
+        # "//tensorboard/plugins/distribution/polymer3/tf_distribution_dashboard",
+        # "//tensorboard/plugins/graph/polymer3/tf_graph_dashboard",
+        # "//tensorboard/plugins/histogram/polymer3/tf_histogram_dashboard",
+        # "//tensorboard/plugins/hparams/polymer3/tf_hparams_dashboard",
+        # "//tensorboard/plugins/image/polymer3/tf_image_dashboard",
+        # "//tensorboard/plugins/mesh/polymer3/tf_mesh_dashboard",
+        # "//tensorboard/plugins/pr_curve/polymer3/tf_pr_curve_dashboard",
+        # "//tensorboard/plugins/profile_redirect/polymer3/tf_profile_redirect_dashboard",
+        # "//tensorboard/plugins/scalar/polymer3/tf_scalar_dashboard",
+        # "//tensorboard/plugins/text/polymer3/tf_text_dashboard",
     ],
 )
