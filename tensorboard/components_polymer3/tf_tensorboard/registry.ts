@@ -18,6 +18,7 @@ export enum ActiveDashboardsLoadState {
   LOADED = 'LOADED',
   FAILED = 'FAILED',
 }
+
 /** Registration for a plugin dashboard UI. */
 export interface Dashboard {
   /**
@@ -54,16 +55,19 @@ export interface Dashboard {
    */
   shouldRemoveDom: boolean;
 }
+
 /** Typedef mapping plugin names to Dashboard registrations. */
 export type DashboardRegistry = {
   [key: string]: Dashboard;
 };
+
 /**
  * Map of all registered dashboards.
  *
  * This object should only be mutated by the registerDashboard() function.
  */
 export let dashboardRegistry: DashboardRegistry = {};
+
 /**
  * For legacy plugins, registers Dashboard for plugin into TensorBoard frontend.
  *

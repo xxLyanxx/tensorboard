@@ -15,7 +15,7 @@ tf_ts_library(
     visibility = ["//visibility:public"],
     deps = [
         ":registry",
-        "//tensorboard/components_polymer3/experimental/plugin_util:plugin_host",
+        "//tensorboard/components_polymer3/experimental/plugin_util:host_internals",
         "//tensorboard/components_polymer3/tf_backend",
         "//tensorboard/components_polymer3/tf_dashboard_common",
         "//tensorboard/components_polymer3/tf_globals",

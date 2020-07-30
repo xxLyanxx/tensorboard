@@ -23,7 +23,7 @@ limitations under the License.
  *
  *     const canceller = new Canceller();
  *     let myPromise: Promise<Foo> = getPromise();
- *     myPromise.then(canceller.cancellable(({value, cancelled} => {
+ *     myPromise.then(canceller.cancellable(({value, cancelled}) => {
  *       if (cancelled) {
  *         console.warn("Don't make promises you can't keep >:-{");
  *       }
@@ -35,10 +35,12 @@ limitations under the License.
  *     // If `myPromise` is resolved now, then `cancelled` will be `true`.
  */
 export class Canceller {
+
   /**
    * How many times has `cancelAll` been called?
    */
   private cancellationCount = 0;
+
   /**
    * Create a cancellable task. This returns a new function that, when
    * invoked, will pass its argument to the provided function as well as
@@ -54,6 +56,7 @@ export class Canceller {
       return f({value, cancelled});
     };
   }
+
   /**
    * Mark all outstanding tasks as cancelled. Tasks not yet created will
    * not be affected.

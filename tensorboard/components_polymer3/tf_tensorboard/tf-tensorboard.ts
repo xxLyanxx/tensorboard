@@ -13,51 +13,59 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
+import {computed, customElement, property} from '@polymer/decorators';
+import '@polymer/iron-icons';
+import '@polymer/paper-button';
+import '@polymer/paper-checkbox';
+import '@polymer/paper-dialog';
+import '@polymer/paper-header-panel';
+import '@polymer/paper-icon-button';
+import '@polymer/paper-listbox';
+import '@polymer/paper-tabs';
+import '@polymer/paper-toolbar';
 import {PolymerElement, html} from '@polymer/polymer';
-import {customElement, property} from '@polymer/decorators';
-import '@polymer/iron-icons';
-import '@polymer/paper-button';
-import '@polymer/paper-checkbox';
-import '@polymer/paper-dialog';
-import '@polymer/paper-header-panel';
-import '@polymer/paper-listbox';
-import '@polymer/paper-icon-button';
-import '@polymer/paper-tabs';
-import '@polymer/paper-toolbar';
-import {DO_NOT_SUBMIT} from '../tf-imports/polymer.html';
-import {DO_NOT_SUBMIT} from '../tf-backend/tf-backend.html';
-import {DO_NOT_SUBMIT} from '../tf-dashboard-common/tensorboard-color.html';
-import {DO_NOT_SUBMIT} from '../tf-globals/tf-globals.html';
-import {DO_NOT_SUBMIT} from '../tf-imports/lodash.html';
-import {DO_NOT_SUBMIT} from '../tf-paginated-view/tf-paginated-view-store.html';
-import {DO_NOT_SUBMIT} from '../tf-storage/tf-storage.html';
-import {DO_NOT_SUBMIT} from '../tf-plugin-util/plugin-host.html';
-import {DO_NOT_SUBMIT} from 'registry.html';
-import {DO_NOT_SUBMIT} from 'autoReloadBehavior';
-import '@polymer/iron-icons';
-import '@polymer/paper-button';
-import '@polymer/paper-checkbox';
-import '@polymer/paper-dialog';
-import '@polymer/paper-header-panel';
-import '@polymer/paper-listbox';
-import '@polymer/paper-icon-button';
-import '@polymer/paper-tabs';
-import '@polymer/paper-toolbar';
-import {DO_NOT_SUBMIT} from '../tf-imports/polymer.html';
-import {DO_NOT_SUBMIT} from '../tf-backend/tf-backend.html';
-import {DO_NOT_SUBMIT} from '../tf-dashboard-common/tensorboard-color.html';
-import {DO_NOT_SUBMIT} from '../tf-globals/tf-globals.html';
-import {DO_NOT_SUBMIT} from '../tf-imports/lodash.html';
-import {DO_NOT_SUBMIT} from '../tf-paginated-view/tf-paginated-view-store.html';
-import {DO_NOT_SUBMIT} from '../tf-storage/tf-storage.html';
-import {DO_NOT_SUBMIT} from '../tf-plugin-util/plugin-host.html';
-import {DO_NOT_SUBMIT} from 'registry.html';
-import {DO_NOT_SUBMIT} from 'autoReloadBehavior';
+import {LegacyElementMixin} from '@polymer/polymer/lib/legacy/legacy-element-mixin';
+import * as _ from 'lodash';
+
+import {Canceller} from '../tf_backend/canceller';
+import {environmentStore} from '../tf_backend/environmentStore';
+import {experimentsStore} from '../tf_backend/experimentsStore';
+import {RequestManager} from '../tf_backend/requestManager';
+import {setRouter, getRouter} from '../tf_backend/router';
+import {runsStore} from '../tf_backend/runsStore';
+import '../tf_dashboard_common/tensorboard-color';
+import {setUseHash} from '../tf_globals/globals';
+//import {DO_NOT_SUBMIT} from '../tf-paginated-view/tf-paginated-view-store.html';
+import {registerPluginIframe} from '../experimental/plugin_util/plugin-host-ipc';
+import {
+  TAB,
+  getString,
+  migrateLegacyURLScheme,
+  setString,
+} from '../tf_storage/storage';
+import {
+  ActiveDashboardsLoadState,
+  Dashboard,
+  dashboardRegistry,
+} from './registry';
+import {AutoReloadBehavior} from './autoReloadBehavior';
+
+/**
+ * @typedef {{
+ *   plugin: string,
+ *   loadingMechanism: !LoadingMechanism,
+ *   tabName: string,
+ *   disableReload: boolean,
+ *   removeDom: boolean,
+ * }}
+ */
 const DashboardDatum = {};
+
 /**
  * @typedef {(LoadingMechanism$CUSTOM_ELEMENT | LoadingMechanism$IFRAME)}
  */
 const LoadingMechanism = {};
+
 /**
  * @typedef {{
  *   type: LoadingMechanism$CUSTOM_ELEMENT$Type,
@@ -65,6 +73,7 @@ const LoadingMechanism = {};
  * }}
  */
 const LoadingMechanism$CUSTOM_ELEMENT = {};
+
 /**
  * @typedef {{
  *   type: LoadingMechanism$IFRAME$Type,
@@ -72,29 +81,29 @@ const LoadingMechanism$CUSTOM_ELEMENT = {};
  * }}
  */
 const LoadingMechanism$IFRAME = {};
+
 // Closure's type system doesn't have string literal types.
 /** @enum {string} */
 const LoadingMechanism$CUSTOM_ELEMENT$Type = {_: 'CUSTOM_ELEMENT'};
+
 /** @enum {string} */
 const LoadingMechanism$IFRAME$Type = {_: 'IFRAME'};
+
 const DATA_SELECTION_CHANGE_DEBOUNCE_MS = 200;
-/** @type {Object} */
-const LocationType = {};
-/** @type {string} */
-LocationType.href = '';
-/** @type {string} */
-LocationType.origin = '';
+
+type LocationType = {href: string; origin: string};
+
 const lib = {
-  /** @return {LocationType} */
-  getLocation() {
+  getLocation(): LocationType {
     return window.location;
   },
 };
 const TEST_ONLY = {
   lib,
 };
+
 @customElement('tf-tensorboard')
-class TfTensorboard extends PolymerElement {
+class TfTensorboard extends LegacyElementMixin(PolymerElement) {
   static readonly template = html`
     <paper-dialog with-backdrop="" id="settings">
       <h2>Settings</h2>
@@ -505,85 +514,75 @@ class TfTensorboard extends PolymerElement {
       }
     </style>
   `;
-  @property({
-    type: String,
-  })
+
+  @property({type: String})
   brand: string = 'TensorBoard-X';
-  @property({
-    type: String,
-  })
+
+  @property({type: String})
   homePath: string = '';
+
   @property({
     type: String,
     observer: '_updateTitle',
   })
   title: string;
+
   @property({
     type: Object,
     observer: '_updateRouter',
   })
   router: object;
-  @property({
-    type: String,
-  })
+
+  @property({type: String})
   demoDir: string = null;
-  @property({
-    type: Boolean,
-  })
+
+  @property({type: Boolean})
   useHash: boolean = false;
-  @property({
-    type: String,
-  })
+
+  @property({type: String})
   disabledDashboards: string = '';
-  @property({
-    type: Object,
-  })
-  _pluginsListing: object = () => ({});
-  @property({
-    type: String,
-  })
-  _activeDashboardsLoadState: string =
-    tf_tensorboard.ActiveDashboardsLoadState.NOT_LOADED;
+
+  @property({type: Object})
+  _pluginsListing: object = {};
+
+  @property({type: String})
+  _activeDashboardsLoadState: string = ActiveDashboardsLoadState.NOT_LOADED;
+
   @property({
     type: String,
     observer: '_selectedDashboardChanged',
   })
-  _selectedDashboard: string = tf_storage.getString(tf_storage.TAB) || null;
+  _selectedDashboard: string = getString(TAB) || null;
+
   @property({type: String})
   _dashboardToMaybeRemove: string;
-  @property({
-    type: Object,
-  })
+
+  @property({type: Object})
   _dashboardContainersStamped: object = () => ({});
-  @property({
-    type: Boolean,
-  })
+
+  @property({type: Boolean})
   _isReloadDisabled: boolean = false;
-  @property({
-    type: String,
-  })
+
+  @property({type: String})
   _lastReloadTime: string = 'not yet loaded';
-  @property({
-    type: String,
-  })
+
+  @property({type: String})
   _lastReloadTimeShort: string = 'Not yet loaded';
-  @property({
-    type: String,
-  })
+
+  @property({type: String})
   _dataLocation: string = null;
-  @property({
-    type: Object,
-  })
-  _requestManager: object = () => new tf_backend.RequestManager();
-  @property({
-    type: Object,
-  })
-  _canceller: object = () => new tf_backend.Canceller();
-  @property({
-    type: Boolean,
-  })
+
+  @property({type: Object})
+  _requestManager: RequestManager = new RequestManager();
+
+  @property({type: Object})
+  _canceller: Canceller = new Canceller();
+
+  @property({type: Boolean})
   _refreshing: boolean = false;
-  behaviors: [tf_tensorboard.AutoReloadBehavior];
+
+  behaviors = [AutoReloadBehavior];
+
   @computed('homePath')
   get _homePath(): string {
     var homePath = this.homePath;
@@ -679,10 +678,11 @@ class TfTensorboard extends PolymerElement {
    */
   _selectedDashboardChanged(selectedDashboard) {
     const pluginString = selectedDashboard || '';
-    tf_storage.setString(tf_storage.TAB, pluginString);
+    setString(TAB, pluginString);
     // Record this dashboard selection as a page view.
     let pathname = window.location.pathname;
     pathname += pathname.endsWith('/') ? pluginString : '/' + pluginString;
+    const ga: any = window['ga']; // note: analytics disabled in open source TB
     ga('set', 'page', pathname);
     ga('send', 'pageview');
   }
@@ -697,7 +697,7 @@ class TfTensorboard extends PolymerElement {
         // Use location.replace for this call to avoid breaking back-button navigation.
         // Note that this will precede the update to tf_storage triggered by updating
         // _selectedDashboard and make it a no-op.
-        tf_storage.setString(tf_storage.TAB, selectedDashboard, {
+        setString(TAB, selectedDashboard, {
           useLocationReplace: true,
         });
         // Note: the following line will re-trigger this handler, but it
@@ -707,7 +707,7 @@ class TfTensorboard extends PolymerElement {
     }
   }
   _updateSelectedDashboardFromHash() {
-    const dashboardName = tf_storage.getString(tf_storage.TAB);
+    const dashboardName = getString(TAB);
     this.set('_selectedDashboard', dashboardName || null);
   }
   /**
@@ -792,7 +792,7 @@ class TfTensorboard extends PolymerElement {
   _renderPluginIframe(container, selectedDashboard, loadingMechanism) {
     const iframe = document.createElement('iframe');
     iframe.id = 'dashboard'; // used in `_selectedDashboardComponent`
-    tb_plugin.host.registerPluginIframe(iframe, selectedDashboard);
+    registerPluginIframe(iframe, selectedDashboard);
     const srcUrl = new URL('data/plugin_entry.html', window.location.href);
     srcUrl.searchParams.set('name', selectedDashboard);
     iframe.setAttribute('src', srcUrl.toString());
@@ -816,7 +816,7 @@ class TfTensorboard extends PolymerElement {
     return dashboard;
   }
   ready() {
-    tf_globals.setUseHash(this.useHash);
+    setUseHash(this.useHash);
     this._updateSelectedDashboardFromHash();
     window.addEventListener(
       'hashchange',
@@ -825,18 +825,19 @@ class TfTensorboard extends PolymerElement {
       },
       /*useCapture=*/ false
     );
-    tf_backend.environmentStore.addListener(() => {
-      this._dataLocation = tf_backend.environmentStore.getDataLocation();
-      const title = tf_backend.environmentStore.getWindowTitle();
+    environmentStore.addListener(() => {
+      this._dataLocation = environmentStore.getDataLocation();
+      const title = environmentStore.getWindowTitle();
       if (title) {
         window.document.title = title;
       }
     });
     // Migration must happen after calling `setUseHash`.
-    tf_storage.migrateLegacyURLScheme();
+    migrateLegacyURLScheme();
     this._reloadData();
     this._lastReloadTime = new Date().toString();
   }
+
   @computed('_dashboardData', '_pluginsListing')
   get _activeDashboards(): unknown[] {
     if (!this._dashboardData) return [];
@@ -854,23 +855,22 @@ class TfTensorboard extends PolymerElement {
         return maybeMetadata && maybeMetadata.enabled;
       });
   }
+
   _onTemplateChanged() {
     // This will trigger an observer that kicks off everything.
     const dashboardContainersStamped = {};
-    for (const container of this.root.querySelectorAll(
-      '.dashboard-container'
-    )) {
+    const containers = this.root.querySelectorAll('.dashboard-container');
+    for (const container of containers as any) {
       dashboardContainersStamped[container.dataset.dashboard] = true;
     }
     this._dashboardContainersStamped = dashboardContainersStamped;
   }
+
   @computed('_pluginsListing')
   get _dashboardRegistry(): object {
     var pluginsListing = this._pluginsListing;
     const registry = {};
-    for (const [name, legacyMetadata] of Object.entries(
-      tf_tensorboard.dashboardRegistry
-    )) {
+    for (const [name, legacyMetadata] of Object.entries(dashboardRegistry)) {
       registry[name] = {
         plugin: legacyMetadata.plugin,
         loadingMechanism: {
@@ -879,7 +879,7 @@ class TfTensorboard extends PolymerElement {
         },
         tabName: legacyMetadata.tabName.toUpperCase(),
         disableReload: legacyMetadata.isReloadDisabled || false,
-        removeDom: legacyMetadata.removeDom || false,
+        removeDom: legacyMetadata.shouldRemoveDom || false,
       };
     }
     if (pluginsListing != null) {
@@ -946,28 +946,27 @@ class TfTensorboard extends PolymerElement {
     Object.assign(orderedRegistry, registry);
     return orderedRegistry;
   }
+
   @computed('_dashboardRegistry')
-  get _dashboardData(): unknown[] {
+  get _dashboardData(): Dashboard[] {
     var dashboardRegistry = this._dashboardRegistry;
     return Object.values(dashboardRegistry);
   }
+
   _fetchPluginsListing() {
     this._canceller.cancelAll();
     const updatePluginsListing = this._canceller.cancellable((result) => {
       if (result.cancelled) {
         return;
       }
-      this._pluginsListing = result.value;
-      this._activeDashboardsLoadState =
-        tf_tensorboard.ActiveDashboardsLoadState.LOADED;
+      this._pluginsListing = result.value as any;
+      this._activeDashboardsLoadState = ActiveDashboardsLoadState.LOADED;
     });
     const onFailure = () => {
       if (
-        this._activeDashboardsLoadState ===
-        tf_tensorboard.ActiveDashboardsLoadState.NOT_LOADED
+        this._activeDashboardsLoadState === ActiveDashboardsLoadState.NOT_LOADED
       ) {
-        this._activeDashboardsLoadState =
-          tf_tensorboard.ActiveDashboardsLoadState.FAILED;
+        this._activeDashboardsLoadState = ActiveDashboardsLoadState.FAILED;
       } else {
         console.warn(
           'Failed to reload the set of active plugins; using old value.'
@@ -975,24 +974,28 @@ class TfTensorboard extends PolymerElement {
       }
     };
     return this._requestManager
-      .request(tf_backend.getRouter().pluginsListing())
+      .request(getRouter().pluginsListing())
       .then(updatePluginsListing, onFailure);
   }
+
   @computed('_activeDashboardsLoadState')
   get _activeDashboardsNotLoaded(): boolean {
     var state = this._activeDashboardsLoadState;
-    return state === tf_tensorboard.ActiveDashboardsLoadState.NOT_LOADED;
+    return state === ActiveDashboardsLoadState.NOT_LOADED;
   }
+
   @computed('_activeDashboardsLoadState')
   get _activeDashboardsLoaded(): boolean {
     var state = this._activeDashboardsLoadState;
-    return state === tf_tensorboard.ActiveDashboardsLoadState.LOADED;
+    return state === ActiveDashboardsLoadState.LOADED;
   }
+
   @computed('_activeDashboardsLoadState')
   get _activeDashboardsFailedToLoad(): boolean {
     var state = this._activeDashboardsLoadState;
-    return state === tf_tensorboard.ActiveDashboardsLoadState.FAILED;
+    return state === ActiveDashboardsLoadState.FAILED;
   }
+
   @computed(
     '_activeDashboardsLoaded',
     '_activeDashboards',
@@ -1004,6 +1007,7 @@ class TfTensorboard extends PolymerElement {
     var selectedDashboard = this._selectedDashboard;
     return loaded && activeDashboards.length === 0 && selectedDashboard == null;
   }
+
   @computed(
     '_activeDashboardsLoaded',
     '_dashboardRegistry',
@@ -1015,29 +1019,33 @@ class TfTensorboard extends PolymerElement {
     var selectedDashboard = this._selectedDashboard;
     return loaded && !!selectedDashboard && registry[selectedDashboard] == null;
   }
+
   _updateRouter(router) {
-    tf_backend.setRouter(router);
+    setRouter(router);
   }
+
   _updateTitle(title) {
     if (title) {
       this.set('brand', title);
     }
   }
+
   reload() {
     if (this._isReloadDisabled) return;
     this._reloadData().then(() => {
       const dashboard = this._selectedDashboardComponent();
-      if (dashboard && dashboard.reload) dashboard.reload();
+      if (dashboard && (dashboard as any).reload) (dashboard as any).reload();
     });
     this._lastReloadTime = new Date().toString();
   }
+
   _reloadData() {
     this._refreshing = true;
     return Promise.all([
       this._fetchPluginsListing(),
-      tf_backend.environmentStore.refresh(),
-      tf_backend.runsStore.refresh(),
-      tf_backend.experimentsStore.refresh(),
+      environmentStore.refresh(),
+      runsStore.refresh(),
+      experimentsStore.refresh(),
     ])
       .then(() => {
         this._lastReloadTimeShort = new Date().toLocaleDateString(undefined, {
@@ -1052,22 +1060,27 @@ class TfTensorboard extends PolymerElement {
         this._refreshing = false;
       });
   }
+
   _getDataRefreshingClass() {
     return this._refreshing ? 'refreshing' : '';
   }
+
   openSettings() {
-    this.$.settings.open();
-    this.$.paginationLimitInput.value = tf_paginated_view.getLimit();
+    // (cast through `any` because `PaperDialogElement` does not declare `open`)
+    (this.$.settings as any).open();
+    // DO NOT SUBMIT: this.$.paginationLimitInput.value = tf_paginated_view.getLimit();
   }
+
   _paginationLimitValidate(event) {
     event.target.validate();
   }
+
   _paginationLimitChanged(e) {
     const value = Number.parseInt(e.target.value, 10);
     // We set type="number" and min="1" on the input, but Polymer
     // doesn't actually enforce those, so we have to check manually.
     if (value === +value && value > 0) {
-      tf_paginated_view.setLimit(value);
+      // DO NOT SUBMIT: tf_paginated_view.setLimit(value);
     }
   }
 }

@@ -46,3 +46,5 @@ style.textContent = `
   }
 `;
 document.head.appendChild(style);
+
+export const __null = null; // force TypeScript to treat this as a module
